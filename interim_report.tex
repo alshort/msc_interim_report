@@ -11,32 +11,6 @@
 \usepackage{caption}
 \usepackage{verbatim}
 
-\begin{comment}
-
-# Brief introduction to the project.
-The report should be a self-contained document so you should provide at least a brief introduction to the problem or area the work is addressing. You may wish to include some brief comments on your motivation for this such as the importance/timeliness of your work. Make sure the objectives of your project are clear and consistent with your research proposal (or, if they have changed or evolved compared to the original proposal, please expain clearly how and why).
-
-# Background research.
-At this stage, you will have done a good deal of finding out about the project area by reading articles, books, websites, technical manuals etc. You need to show that you have a good understanding of the background area and how your project fits in to the existing landscape. There is certainly no room for a full literature review in the progress report, but you should give an indication of how you have gained background information. It would be appropriate to mention just a few citations which you view as key sources for your project.
-
-# Where are you now?
-Provide an overview of your work so far. This should include: Technical content - what work have you done? You should provide a meaningful summary of the significant aspects rather than simply saying "I did x, y and z". This is necessary to show you've actually done it and in order for your assessor to award marks according to the assessment criteria. Progress - review your progress against the original timetable. If unexpected problems or delays have occurred, how have you dealt with the problem?
-
-# What are you doing next?
-You may have changed your plans that were outlined in the research proposal. At the very least, you are likely to have a much clearer idea of how things will proceed and the timings needed to complete each stage. Outline the plans for the remaining period and any alterations to your original ideas. Provide an updated timetable with as much detail as possible.
-
-# Appraisal and reflection.
-What is your assessment on how things have gone so far? Are there lessons learned that you can use to make the work run more smoothly in the remaining period?
-
-# Ethics.
-Please familiarise yourself with the ethical consent guidelines and follow them where necessary, reflecting on any ethical issues in your report.
-
-# Project management.
-How have you managed the project so far? You may be using a formal methodology (eg for software development or management of code versions). It may also be appropriate to refer to less formal ways of keeping on track, for example, regular meetings with your supervisor.
-
-\end{comment}
-
-
 \begin{document}
 \newgeometry{vmargin=2.25cm, hmargin=2.25cm}
 \title{Translating SNAP Algorithm from OpenMP to CUDA}
@@ -50,7 +24,9 @@ How have you managed the project so far? You may be using a formal methodology (
 
 \begin{abstract}
 
+Mini-applications (``miniapps'') are small-scale, representative versions of large-scale pieces of scientific or engineering-focused software that seek to model the performance of an algorithm or program without actually executing the larger program. In this interim report, it is sought to examine the effects of altering the codebase of one such miniapp called ``SNAP'' from utilising only traditional processing cores to utilising a combination of computational processing cores and graphical processing cores and capabilities (mainly the latter), ultimately examining if a boost in performance can be yielded and justifying if this change can be reflected in the larger-scale software SNAP represents.
 
+To this end, a brief introduction to the field of High-Performance Computing (HPC) is offered, along with background of the new field of miniapps. The target miniapp SNAP is discussed in addition to outlining the objectives of what the project aims to achieve by modifying it. Current efforts and progress are detailed and reflected upon against the timeline offered in the project proposal previously submitted as part of this project/module. Finally, further work and a future timeline is described.
 
 \end{abstract}
 
@@ -68,7 +44,6 @@ One of the predominant questions when designing these simulations is what archit
 In general, supercomputers are comprised of numerous server racks housing many full computer systems – each one containing several CPUs, several graphics card, memory, and high-speed networking capabilities – all interconnected via a high-speed network to allow for communication and cooperation. The topology of the network connecting the computers can vary but two types tend to prevail: computer clusters, and grid computing. Clusters are composed of numerous components that are connected via a centralised resource management system to act as one individual system, with multiple clusters connected by a high-speed local area network (e.g. all in a single site) for low-latency communication; grid computing utilises clusters that are distributed geographically with the underlying assumption that a user of the system need not worry about where the computing resources they are going to be utilising are located – this provides reliability and access to and provision of additional resources on demand. The advantage of cluster computing for supercomputing over grid-based computing systems is stability and very low latency between nodes, as there isn’t a need for a high-speed internet connection between sites (also allowing the system to be air-gapped from the outside world for security purposes).
 
 % [OpenMP and MPI – Software and programming paradigms to take advantage of this]
-
 Since the era of Moore’s Law with respect to single-threaded/core workloads is coming to an end\cite{mooreslaw}, processors nowadays tend to have multiple cores, with consumer-grade electronics averaging four cores per chip, as can be seen in Figure \ref{fig:cpu_diagram} which details the architecture of a quad-core Intel Core i7 CPU. In addition to hyper-threading (2 threads per physical core), CPUs can have an effective/``logical” core count of twice that. Programming workloads to take advantage of this hardware-based parallelism can be challenging, and parallelising code over multiple nodes in a supercomputer can be even more so. This is where libraries such as OpenMP\footnote{\url{https://www.openmp.org/}} and MPI\footnote{\url{https://www.mpi-forum.org/}} come in. These are Application Programming Interfaces (APIs) that define how such a complex parallelisation system is to work, and each has multiple open-source implementations that allow for programmers to convert their code from single-threaded to multi-threaded over multiple clusters. It is these technologies predominantly that a large proportion of HPC applications are built with.
 
 % \footnote{\url{https://m.hexus.net/tech/reviews/cpu/16187-intel-core-i7-x58-chipset-systems-go-fsb-invited}}
@@ -80,7 +55,6 @@ Since the era of Moore’s Law with respect to single-threaded/core workloads is
 \end{figure}
 
 % [Use of GPUs – GPU Architecture]
-
 Graphical Processing Units (GPU) are a newer technology than CPUs and serve a dedicated purpose of taking instructions from the CPU and performing multiple, hardware-based mathematical operations for translating three-dimensional shapes and coordinates into two-dimensional projections for rendering to a display, and runs multiple small programs called ``shaders” to handle colour and lighting. Due to the sheer amount of mathematical calculations that need to be performed to display something onto a display, GPUs are architected differently to a CPU. Modern graphics cards, such as NVIDIA’s Turing architecture, pictured in Figure \ref{fig:gpu_diagram}, are composed of multiple stream processors, each divided into hundreds of small cores which perform a single integer or floating-point operation. This stream processing approach allows for vast parallel computation over a large dataset in a paradigm called ``single instruction multiple data” (SIMD).
 
 This parallelism was previously reserved for image and video processing but a few years ago NVIDIA released their CUDA API\cite{cuda_talk}\cite{CUDA} which allows developers to leverage the stream processing nature of the GPU for general-purpose computation. Scientific workloads from biomedical imaging\cite{luebke2008cuda} to deep learning\cite{tang2013deep} are now done on the GPU, and modern supercomputers, such as Summit, are built with large numbers of GPUs to accelerate workloads and perform previously-impossible simulations and workloads.
@@ -96,23 +70,19 @@ This parallelism was previously reserved for image and video processing but a fe
 % Miniapps
 Mini-applications (``miniapp”) are a new area within the field of High Performance Computing (HPC). These applications are small, self-contained proxies for real applications (typically relating to simulation of physical phenomena) to quickly and concisely explore a parameter space, leading to focused and interesting performance results to investigate potential scaling and run-time issues or trade-offs\cite{miniapps}. Miniapps capture the behaviour and essence of their parent applications primarily because of two characteristics of many applications running on distributed systems: the performance of an application will mainly be constituted by the performance of a small subset of the code, and many of the physical models that constitute the rest of the application are mathematically distinct and generally have similar performance characteristics\cite{miniapps}.
 
-\subsection{Aims}
+\subsection{Objectives}
 
 The SN (Discrete Ordinates) Application Proxy (SNAP) is a miniapp that acts as a proxy for discrete ordinates particle transport. It is modelled off another production simulation program developed by the Los Alamos National Laboratory called PARTISN, which solves the linear Boltzmann transport equation (TE)\footnote{Boltzmann Equation: \url{ https://en.wikipedia.org/wiki/Boltzmann_equation}}, simulating neutron criticality and time-independent neutron leakage problems\cite{partisn} in a multi-dimensional phase space. SNAP is a proxy to PARTISN because it provides a concise solution to a discretised, approximated version (though with no real-world relevance) of the same problem PARTISN solves, providing the same data layout, the same number of operations, and loads elements into arrays in approximately the same order.
 
-The SNAP algorithm works by defining the phase space as seven dimensions: three in space (x, y, z), two in angle (octants, angles), one in energy (groups, or energy-based bins of particles), and one of time (time step). SNAP sweeps across the spatial mesh, starting in each of the octants proceeding towards the antipodal octant, performing a time-dependent calculation in each cell using information form the previous time-step and surrounding cells. This motion forms a wave-front motion that sweeps across the three-dimensional space from corner to corner, with work being divided along each diagonal for parallel execution
+The SNAP algorithm works by defining the phase space as seven dimensions: three in space (x, y, z), two in angle (octants, angles), one in energy (groups, or energy-based bins of particles), and one of time (time step). SNAP sweeps across the spatial mesh, starting in each of the octants proceeding towards the antipodal octant, performing a time-dependent calculation in each cell using information from the previous time-step and surrounding cells. This motion forms a wave-front motion that sweeps across the three-dimensional space from corner to corner, with work being divided along each diagonal for parallel execution
 
-The primary aim of this project is to take the SNAP project and convert the parallelisation from an OpenMP-based multi-core CPU implementation, to a CUDA-based GPU implementation and investigate the (potential) performance improvements and scalability of such an enterprise.
-
-\subsection{Problem Statement}
-
-This research proposal defines three key problems that the final output of the project intends to solve. Taken together, these will provide a holistic overview as to the validity and efficacy of this approach of converting CPU-bound parallelised algorithms to utilise the GPU instead (where appropriate). With the SNAP algorithm and open-source repository (specifically the C-based port of the code) in mind, the three key problems this project seeks to solve are:
+With this miniapp in mind, we define three key objectives that the project shall solve. Taken together, these will provide a holistic overview as to the validity and efficacy of this approach of converting CPU-bound parallelised algorithms to utilise the GPU instead (where appropriate). With the SNAP algorithm and open-source repository (specifically the C-based port of the code) in mind, the three objectives are:
 
 \begin{itemize}
 
 \item To instrument, profile, and analyse the current implementation of the code in order to identify areas of the code in which it would be applicable and beneficial to convert to CUDA-based parallelisation.
 
-\item Using the identified areas found in problem 1, to fork the current SNAP GitHub repository\footnote{\url{https://github.com/lanl/SNAP}} and convert the candidate components and routines from OpenMP to utilise the CUDA libraries instead.
+\item Using the identified areas found in problem 1, to fork the current C-based port of the SNAP GitHub repository\footnote{\url{https://github.com/lanl/SNAP}} and convert the candidate components and routines from OpenMP to utilise the CUDA libraries instead.
 
 \item Following the reimplementation of the algorithm to CUDA technology, the last step is to analyse and evaluate the efficiency and efficacy of the new solution in comparison to the previous CPU-based approach. Ideally, a theoretical maximum efficiency of the approach will also be calculated mathematically, and the actual implementation compared against this as another measure of success.
 
@@ -122,13 +92,13 @@ This research proposal defines three key problems that the final output of the p
 
 \section{Related Work}
 
-A seminal work in the field of miniapps was written by Heroux et al\cite{miniapps}, defining the paradigm. Their Mantevo miniapp suite has show successful development of miniapps, such as MiniFE for finite element analysis and MiniMD for molecular dynamics simulations, to demonstrate their versatility and applicability. Others have demonstrated such success in other areas, such as Mallinson et al with ``CloverLeaf”\cite{mallinson2013cloverleaf}, and Los Alamos National Lab (\url{https://www.lanl.gov/projects/codesign/proxy-apps/lanl/index.php}). Miniapps have been shown to produce similar performance characteristics to their fully-ledged counterparts\cite{miniapps}, adding to the efficacy of the paradigm.
+A seminal work in the field of miniapps was written by Heroux et al\cite{miniapps}, defining the paradigm. Their Mantevo miniapp suite has show successful development of miniapps, such as MiniFE for finite element analysis and MiniMD for molecular dynamics simulations, to demonstrate their versatility and applicability. Others have demonstrated such success in other areas, such as Mallinson et al with ``CloverLeaf”\cite{mallinson2013cloverleaf}, and Los Alamos National Lab (\url{https://www.lanl.gov/projects/codesign/proxy-apps/lanl/index.php}). Miniapps have been shown to produce similar performance characteristics to their fully-fledged counterparts\cite{miniapps}, adding to the efficacy of the paradigm.
 
 General-purpose simulations on GPUs have been studied for a long time, with GPUs being a core part of modern computing clusters\cite{debardeleben2013gpu}. Strong-scaling across multiple GPUs\cite{glaser2015strong} is the ideal approach. Consideration is taken also for conversion of existing codebases\cite{zhou2011gpu} and new, bespoke solutions designed with GPU architecture utilisation in mind\cite{glaser2015strong}. Bespoke solutions offer superior code architecture and speed, meaning calculation of theoretical maximum performance increase for a pre-existing code base will have to take this into account.
 
 Writing GPU targeted miniapps in a developing area of work. Baker et al\cite{baker2012high} discuss implementation details of converting the KBA sweep algorithm of the Denovo code system to run on NVIDIA’s Titan GPU. Mallison et al\cite{mallinson2013cloverleaf} demonstrate too with CloverLeaf the performance advantages GPU-based architecture targeting can have over purely CPU-based versions. It is important to note that these performance increases might not necessarily be completely reflected in SNAP’s algorithm due to other considerations, such as the scaling characteristics of the algorithm\cite{shoukourian2014predicting} and communication technologies as highlighted by Glaser et al\cite{glaser2015strong}.
 
-Performance of miniapps with respective to CPU and GPU-based parallelisation frameworks have been explored previously and show promising results which add credence to the motivation of this project. Notably Martineau et al\cite{martineau2017productivity} reaching the conclusion that compiling miniapps to CUDA resulted in greater efficiencies compared to other targets, though care is needed to consider the implementation (especially with respect to data accesses) to avoid the compiler introducing performance penalties.
+Performance of miniapps with respect to CPU- and GPU-based parallelisation frameworks have been explored previously and show promising results which add credence to the motivation of this project. Notably Martineau et al\cite{martineau2017productivity} reached the conclusion that compiling miniapps to CUDA resulted in greater efficiencies compared to other targets, though care is needed to consider the implementation (especially with respect to data accesses) to avoid the compiler introducing performance penalties.
 
 Development of the solution must still mimic the behaviour of the original application however, so care must be taken to preserve this. Heroux et al\cite{miniapps} and Messer et al\cite{messer2015developing} outline the fundamental principles that a miniapp must adhere to and the considerations of forming a miniapp from the base application – all of which would help form testing criteria for this project and future projects to help preserve results and intrinsic behaviour.
 
@@ -136,18 +106,219 @@ Development of the solution must still mimic the behaviour of the original appli
 
 \section{Project Review}
 
+In this section, we review the current progress made on the project so far and reflect upon how the project has progressed to this point, what has gone well and potential areas for improvement. A section follows discussing the plan for how the rest of the project will progress, outlining key stages, timeline and built-in contingency periods in order to complete the work.
 
 \subsection{Current Progress}
 
-\subsection{Reflection of Current Efforts}
+The project has progressed well into the planning and design stage. Unfortunately, it is to be said that this is behind the schedule outlined in the project proposal and presentation given in May – a key item highlighted in the Reflection section that follows. Several key areas of consideration and development are underway, categorised as follows:
+
+\begin{enumerate}
+\item Setting up of a local development and testing environment
+\item Developing a practical understanding of CUDA
+\item Consolidation of the important facets of the algorithm into psuedocode
+\item Development of a mathematical model for how the GPU-based version will operate under ideal conditions
+\end{enumerate}
+
+
+\subsubsection{Local Development and Testing Environment}
+
+In order to maximise the value and amount of time that can be spent developing the project, it is crucial to develop it on a local, non-networked machine to avoid queueing for resources and latency with file transfers and the like.
+
+A personal computer was allocated for the task because of its preferential components that can lend great speed and analytical power to the task. Its specifications are as follows:
+
 \begin{itemize}
-\item Presentation went well
-\item Highlighted problem with gantt chart/timetable - wasn't realistic, exams got in the way
+\item Intel® Core™ i7-6700K CPU, clock speed of 4GHz. It is a quad-core CPU with hyperthreading enabled for an apparent core count of 8.
+\item NVIDIA GeForce GTX 1070 graphics card. Pascal architecture that supports the CUDA Compute functionality, 1.5Ghz base core clock, 8GB of GDDR5 memory, and 15 streaming multi-processors.
+\item 16GB of DDR4 RAM
 \end{itemize}
+
+This will enable a good baseline assessment of how the SNAP program works on the system for a set of given inputs that can then be used for comparison to the GPU-based approach used on the same set of inputs.
+
+For compilation of the code and to imitate a Linux-based computer cluster, Ubuntu will be used as the base operating system due to its wide-ranging support and package compatibility, in addition to having the following packages installed:
+
+\begin{itemize}
+\item Gnu C and C++ libraries – for compilation of C/C++ programs, as well as associated tooling such as \texttt{backtrace}.
+\item \texttt{mpicc} to compile the standard C-port of SNAP
+\item \texttt{OpenMP} to compile the standard C-port of SNAP
+\item NVIDIA drivers and CUDA libraries
+\item All supporting libraries that everything else depends upon
+\end{itemize}
+
+It was important for the program to be run as fast and ``as close to the metal” as possible to get accurate results from various executions because virtual machines or Docker containers could add unseen overheads and not give a true indication of speed or performance of the programs.
+
+After the program has shown promising results (if any) on the local environment, it will be submitted to a computing cluster at the university and see if the solution scales with larger inputs. It’s possible that the program won’t show much improvement in the local environment as it could only marginally improve the performance, whereas it could scale up and save more time per calculation over a much larger input – the type of GPU the cluster runs and the relative amount of streaming multiprocessors in the GPUs versus the number of CPU cores/threads available has the potential to be a significant contributing factor to the results.
+
+
+\subsubsection{CUDA Learning}
+
+A core part of the progress made has been in learning and experimenting with the CUDA framework which is needed to execute the program on the GPU. It was covered at an introductory level as part of the CS402 High-Performance Computing module. From this, I independently explored the documentation and framework further with the aid of NVIDIA’s Developer Blog\footnote{\url{https://devblogs.nvidia.com/even-easier-introduction-cuda/}}, as well as harnessing additional resources online to gain a clear understanding of the technology.
+
+With this knowledge in mind, as well as details about the architecture and layout of the graphics cards utilised in both the local and cluster environments the program is to be executed in, certain design implementations, such as data layout, quantity of data to transfer, and amount of blocks can be processed in parallel, can be confidently estimated and will guide the direction and effectiveness of the implementation.
+
+\subsubsection{Mathematical Model}
+
+In order to get a gist of the amount of reasonable work the GPU could handle at once and estimates for the amount of time and data movement needed for the optimal implementation, a mathematical model was developed to help visualise and describe the interactions between adjacent cells in the approximated algorithm that SNAP uses. The following assumptions were made when developing this model:
+
+\begin{enumerate}
+
+\item The algorithm defines the problem space as a three-dimensionality discretized grid of cells, each with their own values and interactions with their neighbouring adjacent cells – this forms the core of the SNAP algorithm (it itself approximating a continuous algorithm).
+
+\item The problem space is cubic with side $ n $ for ease of modelling. A generalisation to a cuboidal space with dimensions $ (x, y, z) $ can be abstracted from the cubic model later.
+
+\end{enumerate}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.45\textwidth]{Sweep.jpg}
+\caption{Slices of a sweep of 3D grid}
+\label{fig:3dsweepslice}
+\end{figure}
+
+Given these assumptions, we aim to derive the total number of communications between cells in the grid per iteration and how much work this equates to and how much can be parallelised at each stage.
+
+There are $ 8 $ vertices of a cube so $ 8 $ octants to perform the sweep over. Each sweep is divided up into diagonal slices, shown in Figure \ref{fig:3dsweepslice}, of which there are $ (x + y + z) – 1 $ of them ($ 3n – 1 $ in this model). A key point to note is the dependency in each sweep of a slice on the slice before as the direction of the sweep is linear and calculations rely upon previous ones\footnote{As described in the documentation of the SNAP algorithm in their GitHub repository - \url{ https://github.com/lanl/SNAP/blob/master/docs/SNAP-overview-presentation-2015.pdf}}, and each combined sweep of all octants, after all results being collated, forms the basis of the next sweep.
+
+The first $ n $ slices of the grid are comprised of the sum of the first $ n $ triangular numbers’ (i.e. $ 1, 3, 6, 10, 15… $)\footnote{Sequence A000217 in the ``On-line Encyclopedia of Integer Sequences'' (\url{https://oeis.org/A000217})}, worth of cells, with the final $ n $ slices having the same number also (just in reverse order). $ n - 2 $ slices exist between the 2 triangular-based pyramids formed from the previous step, allowing us to develop a function for the first $ m = n + \frac{n - 2}{2} $ slices, and mirror it to get the number of cells in any slice of the grid.
+
+The number of cells in slice $ i $ of a cube of size $ n $ is thus given by the following formula:
+
+\begin{equation}
+cells(i) = \left\{
+	\begin{array}{ll}
+		tri(i) & \mbox{if } i \le n \\
+		tri(i) - 3tri(i - n) & \mbox{if } i \le m \\
+		cells(m - ((i - 1)\bmod m)) & \mbox{otherwise}
+	\end{array}
+\right.
+\end{equation}
+
+Where $ tri(i) $ represents the $i$th triangular number, $ 1 \le i \le 3n - 1 $. 
+
+This means poor performance early on due to low numbers of cells per layer and the inter-slice dependency, but will ultimately scale well and to more graphics card given a large grid.
+
+To work out data transfer, we need to figure out the amount of sends and receive actions are performed per slice. We can again work first out up to the first $ m $ slices, and take the mirror image for the rest of the slices, swapping the number of sends per slice for the receives of the mirror slice and vice versa. For the first $ n - 1 $ slices, each cell sends to 3 neighbouring adjacent cells in the next slice. When $ i \ge n $, we need to take into account the ``cut-off'' portions where some cells only send to 2 neighbours, hence:
+
+\begin{equation}
+sends(i) = \left\{
+	\begin{array}{ll}
+		tri(i) * 3 & \mbox{if } i < n \\
+		(i\bmod(n - 1)) * 2 + \\
+			(cells(i) - i\bmod(n - 1)) * 3 & \mbox{if } i \le m \\
+		recvs(2n - i) & \mbox{otherwise}
+	\end{array}
+\right.
+\end{equation}
+
+The total number of receive actions is similar. The first cell has no neighbours to receive from, the second slice has only 1, the rest have three, then after the $n$th slice we need to consider where we only receive from 2 neighbours:
+
+\begin{equation}
+recvs(i) = \left\{
+	\begin{array}{ll}
+		0 & \mbox{if } i = 1 \\
+		tri(i) & \mbox{if } i = 2 \\
+		tri(i) * 3 & \mbox{if } i \le n \\
+		(cells(i) - (2n - i)) * 3 & \mbox{if } i \le m \\
+		sends(2n - i) \mbox{otherwise}
+	\end{array}
+\right.
+\end{equation}
+
+Both functions are defined in the domain $ 1 \le i \le 3n - 1 $.
+
+If we let $ msg_s $ be the size of a message to send and $ msg_r $ the size of a message to receive from a neighbour (both in number of bytes), and knowing that the fastest data transfer rate of the PCI Express (PCIe) 2.0 bus connecting the graphics card and CPU together is 500MB/s\cite{PCIe}, we can calculate the time per slice to store data from the GPU as
+
+\begin{equation}
+time_s = \frac{sends(i) * msg_s}{5 \times 10^8}
+\end{equation}
+
+and to send data to it as
+
+\begin{equation}
+time_r = \frac{recvs(i) * msg_r}{5 \times 10^8}
+\end{equation}
+
+Aggregating these over all slices, alongside an assumed small, constant kernel function calculation time $ C $ over $ cells(i) $ cells in the slices, yields the best-case calculation time for the current approach. From here, we can interleave all 8 octants for calculation at once (of course managing the number of streaming multi-processors, which, after a point, we'd need to vastly scale hardware or queue work) to improve our throughput. $C$ ultimately depends on the type of graphics card being used.
+
+\subsection{Reflection of Current Efforts}
+
+Three areas come into focus when reviewing the current state of the project:
+
+\subsubsection{Presentation}
+
+Feedback from the presentation was positive, reinforcing and supporting the background research done earlier in the process. This gives me confidence going forward that the project will have a meaningful and relevant outcome to the field. The main issue highlighted with the project was the timeline I had originally set to do each stage of the project. When viewed in isolation, the timeline was generous and appropriate, but factoring in design decisions, examinations, and other deadlines, it became apparent that not enough contingency was built into the process for unseen eventualities and this has unfortunately resulted in the project being behind its original timeline. 
+
+\subsubsection{Examinations}
+
+One key reason was the error in not factoring in appropriate time for revision and examinations, which took up the bulk of May and early June, in which the project’s development faltered. This is a minor setback and a revised Gantt chart for future development is presented later in the report.
+Development didn’t stop however, as the development environment was still established and, as part of the CS402 High-Performance Computing module, there was substantial headway made with regards to learning CUDA, architecting, and analysing parallelised programs. This knowledge stands me in good stead to progress the work back up to where it should be and at a more fundamentally sound level.
+
+
+\subsubsection{Other}
+
+Finally, an area that might need to be reviewed, even if just at a cursory level, is the Related Work section. The field of HPC is a fast moving one so, combined with NVIDIA’s announcement of their ``Super” consumer graphics cards\footnote{\url{https://www.nvidia.com/en-us/geforce/graphics-cards/rtx-2080-super/}} and other technologies, it would be beneficial to review the literature again to ensure that this project is still at the cutting-edge – if new papers and results have come to light, it can only help to bolster this project and the speed and effectiveness with which it can be produced.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Going Forward}
+\section{Plan for Further Work}
+
+Below is an itemised list, in order of what needs to be completed first, of the rest of the work needed to complete the project. The work spans all areas of conceptual design, development, testing, and reporting, due to the time impediments discussed in the reflection prior.
+
+\begin{enumerate}
+
+\item Exploring and confirming the mathematical model of the system to ensure that it’s representative of what is happening in the system, as well as ensuring it’s at least theoretically better than the current CPU-bound implementation.
+
+\item Using the mathematical model as a guide for the ideal scenario, start to develop the CUDA-based alteration in earnest. Care being taken at this stage to write an appropriate kernel function and manage data transfer to be as minimal as possible.
+
+\item Continually test the approach in a local testing environment that allows for parallelised C code to run on a CUDA-enabled device – ideally the bare-metal Linux environment setup on my personal machine but a VM with more than one CPU core allocated and GPU pass-through would suffice.
+
+\item Once development has reached its final stages, collate a range of inputs for the program (provided in the original SNAP repository) and execute them both with the old SNAP code and the new GPU-accelerated program.
+
+\item Compare and contrast the results of step 4, making any necessary design tweaks or fixes to the implementation as required.
+
+\item Fully document the findings in the final dissertation, alongside the methodology, details of the design, and implementation nuances or difficulties faced.
+
+\end{enumerate}
+
+
+\subsection{Project Management}
+
+The code for the project will be managed by a public code repository hosted on GitHub at the following address: \url{https://github.com/alshort/SNAP}. It will be hosted under the same licence at the original and follow the usual best practices with regards to version control of atomic changes and experimental items done on a new branch and merged down to master if successful. Version control will keep a backup of different stages of the code should reversion be required. It will also be open-source allowing others to contribute to it in the future.
+
+Finally, the project will be managed at a higher-level by producing work in-line with the revised timeline (as seen below), in addition to frequent communication with the project supervisor and any additional people as required to help provide solutions to impediments, feedback on current progress and the overarching approach, and for further advice should it be needed at any stage of the project.
+
+The Gantt chart of the rest of the timeline of the project is as follows:
+
+\begin{figure}[h!]
+\centering
+\ganttset{calendar week text=\small{\startday}}
+\begin{ganttchart}[
+    hgrid,x unit=0.08cm,
+    hgrid style/.style={draw=black!5, line width=.75pt},
+    vgrid={draw=none,draw=none},
+    bar label node/.style={text width=2cm,align=right,font=\scriptsize\RaggedLeft,anchor=east},
+    group label node/.style={text width=2cm,align=right,font=\bf\scriptsize\RaggedLeft,anchor=east},
+    time slot format=little-endian]{01-07-2019}{12-09-2019}
+\gantttitlecalendar{month=shortname, week=4} \\
+\ganttgroup{Total Duration}{01-07-2019}{12-09-19}\\
+% Investigation and Design
+\ganttgroup{Investigation and Design}{01-07-19}{31-07-19}\\
+\ganttbar{Collating Stacktraces and Data}{01-07-19}{20-07-19}\\
+\ganttbar{Mathematical Model}{01-07-19}{27-07-19}\\
+\ganttbar{Finalise CUDA Education}{01-07-19}{31-07-19}\\
+% Design and implementation
+\ganttgroup{Design and Implementation}{01-07-19}{30-08-19}\\
+% Testing
+\ganttgroup{Testing}{15-07-19}{14-08-19}\\
+\ganttbar{Local Profiling and Benchmarking}{15-07-19}{14-08-19}\\
+\ganttbar{Cluster Profiling and Benchmarking}{14-07-19}{14-08-19}\\
+% Dissertation
+\ganttgroup{Dissertation}{26-08-19}{12-09-19}\\
+\ganttbar{Writing}{26-08-19}{10-09-19}\\
+\ganttbar{Proof Reading and Editing}{5-09-19}{12-09-19}
+\end{ganttchart}
+\end{figure}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
